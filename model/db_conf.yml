@@ -1,6 +1,0 @@
-ip: 121.36.31.113:3306
-port: 3306
-protocol: tcp
-user: pengpeng
-password: hdeilm1718
-db_name: sedesign

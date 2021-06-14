@@ -1,17 +1,29 @@
 package main
 
 import (
-	"SEDesign/model"
-	"fmt"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
+	"SEDesign/method"
+	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
 )
 
 func main(){
-	dsn := "pengpeng:hdeilm1718@tcp(121.36.31.113:3306)/sedesign?charset=utf8&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	r := gin.Default()
+	r.POST("/create", func(c *gin.Context){
+		err := method.CreateTask(c)
+		if err != nil {
+			log.Printf("Call create task err: %v\n", err)
+			c.JSON(http.StatusOK, gin.H{
+				"resp": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"resp": "create task success!",
+			})
+		}
+	})
+	err := r.Run(":8000")
 	if err != nil {
-		fmt.Printf("mysql err: ", err)
+		return
 	}
-	db.AutoMigrate(&model.Comment{})
 }
