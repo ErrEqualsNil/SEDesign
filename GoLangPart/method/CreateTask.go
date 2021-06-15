@@ -11,7 +11,8 @@ import (
 )
 
 type CreateTaskReqParam struct {
-	Name string `form:"name" json:"name" binding:"required"`
+	Name string `form:"name" json:"name"`
+	Url string `form:"url" json:"url"`
 }
 
 type CreateTaskHandler struct {
@@ -19,9 +20,9 @@ type CreateTaskHandler struct {
 	req CreateTaskReqParam
 }
 
-func (handler CreateTaskHandler) checkValid (req CreateTaskReqParam) bool {
-	if len(req.Name) == 0 {
-		log.Printf("Name Not Found")
+func (handler CreateTaskHandler) checkValid () bool {
+	if len(handler.req.Name) == 0 && len(handler.req.Url) == 0{
+		log.Printf("req Illegal, req: %v", handler.req)
 		return false
 	}
 	return true
@@ -33,7 +34,7 @@ func (handler CreateTaskHandler) Run () error {
 		return errors.New("invalid req")
 	}
 	//参数检查
-	if !handler.checkValid(handler.req) {
+	if !handler.checkValid() {
 		log.Printf("Invalid params")
 		return errors.New("invalid params")
 	}
@@ -41,6 +42,7 @@ func (handler CreateTaskHandler) Run () error {
 	//写入mysql
 	task := &model.Task{
 		ItemName: handler.req.Name,
+		Url: handler.req.Url,
 		Status: model.TaskStatusCreating,
 	}
 	err := db.CreateTask(task)

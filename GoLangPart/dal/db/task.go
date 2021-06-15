@@ -64,7 +64,7 @@ func MGetUnSubmitTask() ([]*model.Task, error) {
 	}
 
 	result := make([]*model.Task, 0)
-	err = conn.Model(model.Task{}).Where("status=?", model.TaskStatusCreating).Find(&result).Error
+	err = conn.Model(model.Task{}).Where("status in (?)", []model.TaskStatus{model.TaskStatusCreating, model.TaskStatusUnknown}).Find(&result).Error
 	if err != nil {
 		log.Printf("error to find task (unsubmited), err:%v", err)
 		return nil, err

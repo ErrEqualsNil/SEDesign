@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-func ReSubmitTaskEachMinute() {
+func AbnormalTaskCheckEachHour() {
 	for {
 		time.Sleep(1 * time.Hour)
-		err := ReSubmit()
+		err := AbnormalTaskCheckEachHourRun()
 		if err != nil {
-			log.Printf("Re-submit task err: %v", err)
+			log.Printf("AbnormalTaskCheckEachHourRun err: %v", err)
 		}
 	}
 }
 
-func ReSubmit() error {
+func AbnormalTaskCheckEachHourRun() error {
 	tasks, err := db.MGetUnSubmitTask()
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {

@@ -8,9 +8,8 @@ import (
 )
 
 func main(){
-
 	//定时检查未提交的任务
-	go method.ReSubmitTaskEachMinute()
+	go method.AbnormalTaskCheckEachHour()
 
 	r := gin.Default()
 	r.POST("/create_task", func(context *gin.Context){

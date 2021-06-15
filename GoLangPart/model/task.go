@@ -13,6 +13,7 @@ const (
 type Task struct {
 	Id           uint64 `gorm:"column:id;unique;AUTO_INCREMENT;NOT NULL"`
 	ItemName     string `gorm:"column:item_name;NOT NULL"` // 商品名
+	Url          string `gorm:"column:url;NOT NULL"`       // 商品url
 	Status       TaskStatus    `gorm:"column:status;NOT NULL"`    // 任务状态
 	Report       string `gorm:"column:report"`             // 分析结果报告
 	WordCloudUrl string `gorm:"column:word_cloud_url"`     // 词云图
