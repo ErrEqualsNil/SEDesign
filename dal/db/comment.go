@@ -2,56 +2,20 @@ package db
 
 import (
 	"SEDesign/model"
-	"fmt"
-	"gopkg.in/yaml.v2"
-	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"io/ioutil"
 	"log"
 )
 
-type MySQlConf struct {
-	Ip       string
-	Port     string
-	Protocol string
-	User     string
-	Password string
-	Dbname   string
-}
-
-func GetConnection() (*gorm.DB, error) {
-	data, err := ioutil.ReadFile("conf/db_conf.yml")
-	if err != nil {
-		log.Printf("read db_conf err: %v", err)
-		return nil, err
-	}
-	conf := MySQlConf{}
-	err = yaml.Unmarshal(data, &conf)
-	if err != nil {
-		log.Printf("yaml Unmarshal err: %v", err)
-		return nil, err
-	}
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-		conf.User, conf.Password, conf.Protocol, conf.Ip, conf.Port, conf.Dbname)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Printf("dsn: %v", dsn)
-		log.Printf("db get connection err: %v", err)
-		return nil, err
-	}
-	return db, nil
-}
-
 func MGetComment(ids []uint64) ([]*model.Comment, error) {
-	db, err := GetConnection()
+	db, err := GetConn()
 	if err != nil {
-		log.Printf("call db GetConnection err: %v", err)
+		log.Printf("call db GetConn err: %v", err)
 		return nil, err
 	}
 	result := make([]*model.Comment, 0)
 	err = db.Model(model.Comment{}).Where("id in (?)", ids).Find(&result).Error
 	if err != nil {
-		log.Printf("error to find from db, err: %v, ids: %v", err, ids)
+		log.Printf("error to find comment at db, err: %v, ids: %v", err, ids)
 		return nil, err
 	}
 	if len(result) == 0 {
@@ -61,33 +25,21 @@ func MGetComment(ids []uint64) ([]*model.Comment, error) {
 	return result, nil
 }
 
-func UpdateComment(id uint64, params map[string]interface{}) error {
-	db, err := GetConnection()
+func MGetCommentByTaskId(taskId uint64, offset int, limit int) ([]*model.Comment, error) {
+	db, err := GetConn()
 	if err != nil {
-		log.Printf("call db GetConnection err: %v", err)
-		return err
+		log.Printf("call db GetConn err: %v", err)
+		return nil, err
 	}
-
-	err = db.Model(model.Comment{}).Where("id = ?", id).Updates(params).Error
+	result := make([]*model.Comment, 0)
+	err = db.Model(model.Comment{}).Where("task_id=?", taskId).Limit(limit).Offset(offset).Find(&result).Error
 	if err != nil {
-		log.Printf("error to update from db, err: %v, ids: %v", err, id)
-		return err
+		log.Printf("error to find comment by task id, err: %v", err)
+		return nil, err
 	}
-
-	return nil
-}
-
-func CreateComment(comment *model.Comment) error {
-	db, err := GetConnection()
-	if err != nil {
-		log.Printf("call db GetConnection err: %v", err)
-		return err
+	if len(result) == 0 {
+		log.Printf("Comment Not Found, taskId: %v", taskId)
+		return nil, gorm.ErrRecordNotFound
 	}
-
-	err = db.Create(comment).Error
-	if err != nil {
-		log.Printf("error to create from db, err: %v, comment: %v", err, comment)
-		return err
-	}
-	return nil
+	return result, nil
 }

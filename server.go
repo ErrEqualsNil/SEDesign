@@ -8,20 +8,39 @@ import (
 )
 
 func main(){
+
+	//定时检查未提交的任务
+	go method.ReSubmitTaskEachMinute()
+
 	r := gin.Default()
-	r.POST("/create", func(c *gin.Context){
-		err := method.CreateTask(c)
+	r.POST("/create_task", func(context *gin.Context){
+		handler := method.CreateTaskHandler{
+			Ctx: context,
+		}
+		err := handler.Run()
 		if err != nil {
-			log.Printf("Call create task err: %v\n", err)
-			c.JSON(http.StatusOK, gin.H{
+			log.Printf("Call CreateTask err: %v\n", err)
+			context.JSON(http.StatusOK, gin.H{
+				"status_code": http.StatusInternalServerError,
 				"resp": err.Error(),
-			})
-		} else {
-			c.JSON(http.StatusOK, gin.H{
-				"resp": "create task success!",
 			})
 		}
 	})
+
+	r.POST("/search_comment_by_task_id", func(context *gin.Context) {
+		handler := method.MGetCommentByTaskIdHandler{
+			Ctx: context,
+		}
+		err := handler.Run()
+		if err != nil {
+			log.Printf("Call MGetCommentByTaskId err: %v\n", err)
+			context.JSON(http.StatusOK, gin.H{
+				"status_code": http.StatusInternalServerError,
+				"resp": err.Error(),
+			})
+		}
+	})
+
 	err := r.Run(":8000")
 	if err != nil {
 		return
