@@ -20,6 +20,10 @@ type SearchTaskReqParams struct {
 const ES_Index_Name = "spider_tasks"
 
 func AddTask(tasks []*model.Task) error {
+	if len(tasks) == 0 {
+		log.Printf("No tasks to sync")
+		return nil
+	}
 	conn, err := GetESConn()
 	if err != nil {
 		log.Fatalf("es get conn err: %v", err)

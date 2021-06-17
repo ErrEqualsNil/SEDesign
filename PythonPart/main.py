@@ -1,7 +1,10 @@
+import json
+
 import redis
 import sqlobject
-from PythonPart import Analyzer
 from Model import Task, Comment
+import requests
+import Spider
 
 
 class Settings:
@@ -22,18 +25,23 @@ class Listener:
         print(mysqlUrl)
         self.MySQLConn = sqlobject.connectionForURI(mysqlUrl)
         sqlobject.sqlhub.processConnection = self.MySQLConn
-        self.Analysiser = Analyzer
+        self.spider = Spider.Spider()
 
     def get_message(self):
         print("Listener Listening!")
         while 1:
             message = self.RedisConn.brpop("Tasks", timeout=None)
             print("Get Message {}".format(message))
-            task_id = int(message[0])
+            task_id = int(message[1])
             task = Task.get(id=task_id)
             # TODO: Call services
+            task.status = 3
+            self.spider.get_comment(task)
+            # todo: call analysis services
+            task.status = 4
+
 
 
 if __name__ == '__main__':
-    listener = Listener()
-    listener.get_message()
+    l = Listener()
+    l.get_message()
