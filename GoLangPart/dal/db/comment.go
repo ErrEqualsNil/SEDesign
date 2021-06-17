@@ -7,9 +7,9 @@ import (
 )
 
 func MGetComment(ids []uint64) ([]*model.Comment, error) {
-	db, err := GetConn()
+	db, err := GetMySQLConn()
 	if err != nil {
-		log.Printf("call db GetConn err: %v", err)
+		log.Printf("call db GetMySQLConn err: %v", err)
 		return nil, err
 	}
 	result := make([]*model.Comment, 0)
@@ -26,9 +26,9 @@ func MGetComment(ids []uint64) ([]*model.Comment, error) {
 }
 
 func MGetCommentByTaskId(taskId uint64, offset int, limit int) ([]*model.Comment, error) {
-	db, err := GetConn()
+	db, err := GetMySQLConn()
 	if err != nil {
-		log.Printf("call db GetConn err: %v", err)
+		log.Printf("call db GetMySQLConn err: %v", err)
 		return nil, err
 	}
 	result := make([]*model.Comment, 0)

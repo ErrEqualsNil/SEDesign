@@ -18,7 +18,7 @@ func main(){
 		}
 		err := handler.Run()
 		if err != nil {
-			log.Printf("Call CreateTask err: %v\n", err)
+			log.Printf("Call CreateTask err: %v", err)
 			context.JSON(http.StatusOK, gin.H{
 				"status_code": http.StatusInternalServerError,
 				"resp": err.Error(),
@@ -32,7 +32,21 @@ func main(){
 		}
 		err := handler.Run()
 		if err != nil {
-			log.Printf("Call MGetCommentByTaskId err: %v\n", err)
+			log.Printf("Call MGetCommentByTaskId err: %v", err)
+			context.JSON(http.StatusOK, gin.H{
+				"status_code": http.StatusInternalServerError,
+				"resp": err.Error(),
+			})
+		}
+	})
+
+	r.POST("/search_task", func(context *gin.Context) {
+		handler := method.SearchTaskHandler{
+			Ctx: context,
+		}
+		err := handler.Run()
+		if err != nil {
+			log.Printf("Call SearchTask err: %v", err)
 			context.JSON(http.StatusOK, gin.H{
 				"status_code": http.StatusInternalServerError,
 				"resp": err.Error(),

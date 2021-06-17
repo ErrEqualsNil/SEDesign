@@ -28,8 +28,9 @@ func (handler MGetCommentByTaskIdHandler) checkValid (req MGetCommentByTaskIdReq
 }
 
 func (handler MGetCommentByTaskIdHandler) Run () error {
-	if handler.Ctx.ShouldBind(&handler.req) != nil {
-		log.Printf("Invalid req: %v", handler.Ctx.PostForm("task_id"))
+	err := handler.Ctx.ShouldBind(&handler.req)
+	if err != nil {
+		log.Printf("Invalid err: %v", err)
 		return errors.New("invalid req")
 	}
 	//参数检查

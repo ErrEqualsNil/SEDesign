@@ -6,10 +6,10 @@ import (
 	"log"
 )
 
-func MGetTasks(ids []uint64) ([]*model.Task, error) {
-	conn, err := GetConn()
+func MGetTasks(ids []int64) ([]*model.Task, error) {
+	conn, err := GetMySQLConn()
 	if err != nil {
-		log.Printf("call db GetConn err: %v", err)
+		log.Fatalf("call db GetMySQLConn err: %v", err)
 		return nil, err
 	}
 
@@ -27,9 +27,9 @@ func MGetTasks(ids []uint64) ([]*model.Task, error) {
 }
 
 func CreateTask(task *model.Task) error {
-	conn, err := GetConn()
+	conn, err := GetMySQLConn()
 	if err != nil {
-		log.Printf("call db GetConn err: %v", err)
+		log.Fatalf("call db GetMySQLConn err: %v", err)
 		return err
 	}
 
@@ -41,10 +41,10 @@ func CreateTask(task *model.Task) error {
 	return nil
 }
 
-func UpdateTaskStatus(id uint64, newStatus model.TaskStatus) error {
-	conn, err := GetConn()
+func UpdateTaskStatus(id int64, newStatus model.TaskStatus) error {
+	conn, err := GetMySQLConn()
 	if err != nil {
-		log.Printf("call db GetConn err: %v", err)
+		log.Fatalf("call db GetMySQLConn err: %v", err)
 		return err
 	}
 
@@ -57,9 +57,9 @@ func UpdateTaskStatus(id uint64, newStatus model.TaskStatus) error {
 }
 
 func MGetUnSubmitTask() ([]*model.Task, error) {
-	conn, err := GetConn()
+	conn, err := GetMySQLConn()
 	if err != nil {
-		log.Printf("call db GetConn err: %v", err)
+		log.Fatalf("call db GetMySQLConn err: %v", err)
 		return nil, err
 	}
 
