@@ -36,7 +36,7 @@ class Listener:
             task = Task.get(id=task_id)
             # TODO: Call services
             task.status = 3
-            self.spider.get_comment(task)
+            self.spider.run_spider(task.id, task.itemId)
             # todo: call analysis services
             task.status = 4
 
