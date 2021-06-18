@@ -36,6 +36,7 @@ class Spider:
             for page in range(category.count // 10):
                 if page % 10 == 0:
                     time.sleep(random.randint(0, 2))
+                print("catching: category_score:{} ; page:{}".format(category.score, page))
                 try:
                     currentUrl = self.CommentUrl.format(task.itemId, category.score, category.sortType, page, 10)
                     resp = requests.get(currentUrl, headers=self.headers)
