@@ -35,3 +35,20 @@ func AddTaskToCache(itemId int64) error {
 	}
 	return nil
 }
+
+func DeleteTaskById(taskId int64) error {
+	conn, err := GetRedisConn()
+	if err != nil {
+		log.Fatalf("get redis conn err: %v", err)
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.Do("SREM", "TaskSet", taskId)
+	if err != nil {
+		log.Printf("redis call SREM TaskSet %v err: %v", taskId, err)
+		return err
+	}
+	return nil
+
+}

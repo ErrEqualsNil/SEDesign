@@ -23,7 +23,7 @@ type SearchTaskHandler struct {
 }
 
 func (handler SearchTaskHandler) checkValid () bool {
-	if len(handler.req.Name) == 0 && handler.req.TaskId == 0 && handler.req.ItemId == 0{
+	if handler.req.Offset < 0 || handler.req.Limit < 0{
 		log.Printf("Invalid Param: %v", handler.req)
 		return false
 	}

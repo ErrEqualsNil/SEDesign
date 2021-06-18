@@ -26,31 +26,46 @@ func MGetTasks(ids []int64) ([]*model.Task, error) {
 	return result, nil
 }
 
-func CreateTask(task *model.Task) error {
+func MCreateTask(tasks []*model.Task) error {
 	conn, err := GetMySQLConn()
 	if err != nil {
 		log.Fatalf("call db GetMySQLConn err: %v", err)
 		return err
 	}
 
-	err = conn.Model(model.Task{}).Create(task).Error
+	err = conn.Model(model.Task{}).Create(tasks).Error
 	if err != nil {
-		log.Printf("error to create task at db, err: %v, task: %v", err, task)
+		log.Printf("error to create task at db, err: %v, tasks: %v", err, tasks)
 		return err
 	}
 	return nil
 }
 
-func UpdateTaskStatus(id int64, newStatus model.TaskStatus) error {
+func DeleteTask(taskId int64) error {
 	conn, err := GetMySQLConn()
 	if err != nil {
 		log.Fatalf("call db GetMySQLConn err: %v", err)
 		return err
 	}
 
-	err = conn.Model(model.Task{}).Where("id=?", id).Update("status", newStatus).Error
+	err = conn.Model(model.Task{}).Delete(&model.Task{}, taskId).Error
 	if err != nil {
-		log.Printf("error to update task status at db, err: %v, taskId: %v", err, id)
+		log.Printf("error to delete task at db, err: %v, taskId: %v", err, taskId)
+		return err
+	}
+	return nil
+}
+
+func UpdateTaskStatus(taskIds []int64, newStatus model.TaskStatus) error {
+	conn, err := GetMySQLConn()
+	if err != nil {
+		log.Fatalf("call db GetMySQLConn err: %v", err)
+		return err
+	}
+
+	err = conn.Model(model.Task{}).Where("id in (?)", taskIds).Updates(map[string]interface{}{"status": newStatus}).Error
+	if err != nil {
+		log.Printf("error to update task status at db, err: %v, taskIds: %v", err, taskIds)
 		return err
 	}
 	return nil

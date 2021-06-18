@@ -9,17 +9,17 @@ import (
 	"time"
 )
 
-func AbnormalTaskCheckEachHour() {
+func SubmitTaskEachTenMin() {
 	for {
-		time.Sleep(1 * time.Hour)
-		err := AbnormalTaskCheckEachHourRun()
+		time.Sleep(10 * time.Minute)
+		err := SubmitTaskRun()
 		if err != nil {
-			log.Printf("AbnormalTaskCheckEachHourRun err: %v", err)
+			log.Printf("SubmitTaskRun err: %v", err)
 		}
 	}
 }
 
-func AbnormalTaskCheckEachHourRun() error {
+func SubmitTaskRun() error {
 	tasks, err := db.MGetUnSubmitTask()
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -30,18 +30,22 @@ func AbnormalTaskCheckEachHourRun() error {
 		return err
 	}
 
+	taskIds := make([]int64, 0)
 	for _, task := range tasks {
+		taskIds = append(taskIds, task.Id)
+		//提交到 message queue
 		err = mq.SubmitTask(task)
 		if err != nil {
 			log.Printf("mq SubmitTask err: %v, TaskId: %v", err, task.Id)
 			return err
 		}
+	}
 
-		err = db.UpdateTaskStatus(task.Id, model.TaskStatusQueueing)
-		if err !=nil {
-			log.Printf("db UpdateTaskStatus err: %v, TaskId: %v", err, task.Id)
-			return err
-		}
+	//更新状态
+	err = db.UpdateTaskStatus(taskIds, model.TaskStatusQueueing)
+	if err !=nil {
+		log.Printf("db UpdateTaskStatus err: %v, TaskId: %v", err, taskIds)
+		return err
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"SEDesign/model"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/olivere/elastic/v7"
 	"log"
 	"strconv"
@@ -57,7 +58,7 @@ func SearchTaskByName(param *SearchTaskReqParams) (int64, []int64, error) {
 	}
 	if param == nil {
 		log.Printf("req is nil")
-		return 0, nil, err
+		return 0, nil, errors.New("invalid req")
 	}
 	query := elastic.NewBoolQuery()
 	if len(param.Name) != 0 {

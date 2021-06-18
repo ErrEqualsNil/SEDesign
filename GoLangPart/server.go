@@ -9,7 +9,7 @@ import (
 
 func main(){
 	//定时检查未提交的任务
-	go method.AbnormalTaskCheckEachHour()
+	go method.SubmitTaskEachTenMin()
 
 	r := gin.Default()
 	r.POST("/create_task", func(context *gin.Context){
@@ -50,6 +50,22 @@ func main(){
 			context.JSON(http.StatusOK, gin.H{
 				"status_code": http.StatusInternalServerError,
 				"resp": err.Error(),
+			})
+		}
+	})
+
+	r.POST("/submit_task", func(context *gin.Context) {
+		err := method.SubmitTaskRun()
+		if err != nil {
+			log.Printf("Call SubmitTaskRun err: %v", err)
+			context.JSON(http.StatusOK, gin.H{
+				"status_code": http.StatusInternalServerError,
+				"resp":        err.Error(),
+			})
+		} else {
+			context.JSON(http.StatusOK, gin.H{
+				"status_code": http.StatusOK,
+				"resp": "submit task success!",
 			})
 		}
 	})

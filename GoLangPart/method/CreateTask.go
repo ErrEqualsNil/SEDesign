@@ -4,7 +4,6 @@ import (
 	"SEDesign/dal/cache"
 	"SEDesign/dal/db"
 	"SEDesign/dal/es"
-	"SEDesign/dal/mq"
 	"SEDesign/model"
 	"errors"
 	"fmt"
@@ -48,26 +47,29 @@ func (handler CreateTaskHandler) Run () error {
 		return errors.New("invalid params")
 	}
 
-	//写入mysql
+	//构建task
 	tasks, err := handler.fillTask()
 	if err != nil {
 		log.Printf("fill task err: %v", err)
 		return err
 	}
-	for _, task := range tasks{
-		err := db.CreateTask(task)
-		if err != nil {
-			log.Printf("db create comment err: %v", err)
-			return err
-		}
 
-		//写入mq
-		err = mq.SubmitTask(task)
+	//批量写入mysql
+	err = db.MCreateTask(tasks)
+	if err != nil {
+		log.Printf("db MCreateTask err: %v", err)
+		return err
+	}
+
+	//写入redis
+	for _, task := range tasks{
+		err = cache.AddTaskToCache(task.ItemId)
 		if err != nil {
-			log.Printf("mq submit task err: %v", err)
-			return err
+			log.Printf("cache AddTaskToCache err: %v", err)
 		}
 	}
+
+	//批量写入es
 	err = es.AddTask(tasks)
 	if err != nil {
 		log.Printf("es add task err: %v", err)
@@ -77,12 +79,13 @@ func (handler CreateTaskHandler) Run () error {
 	handler.Ctx.JSON(http.StatusOK, gin.H{
 		"status_code": http.StatusOK,
 		"resp": "create task success!",
+		"tasks": tasks,
 	})
 	return nil
 }
 
 func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
-	if len(handler.req.Name) != 0 && handler.req.ItemId != 0 {
+	if handler.req.ItemId != 0 {
 		exist, err := cache.CheckTaskExists(handler.req.ItemId)
 		if err != nil{
 			log.Printf("cache CheckTaskExists err: %v", err)
@@ -91,18 +94,21 @@ func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
 			log.Printf("task exist, itemId: %v", handler.req.ItemId)
 			return nil, nil
 		}
-		err = cache.AddTaskToCache(handler.req.ItemId)
+
+		name, err := GetItemNameByItemId(handler.req.ItemId)
 		if err != nil {
-			log.Printf("cache AddTaskToCache err: %v", err)
+			log.Printf("GetItemNameByItemId err: %v", err)
+			return nil, err
 		}
 		task := &model.Task{
-			ItemName: handler.req.Name,
+			ItemName: name,
 			ItemId: handler.req.ItemId,
-			Status: model.TaskStatusQueueing,
+			Status: model.TaskStatusCreating,
 			CommentCount: 0,
 		}
 		return []*model.Task{task}, nil
 	}
+
 	if len(handler.req.Name) != 0 {
 		encode_name := url.QueryEscape(handler.req.Name)
 		searchUrl := fmt.Sprintf("https://search.jd.com/Search?keyword=%v&enc=utf-8", encode_name)
@@ -144,7 +150,7 @@ func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
 			}
 			itemIds = append(itemIds, int64(id))
 		})
-		itemIds = itemIds[0:10]
+		itemIds = itemIds[1:6] // 选择商品搜索页面的第2-6个商品（第一个经常是广告商品）
 		result := make([]*model.Task, 0)
 		for _, itemId := range itemIds {
 			exist, err := cache.CheckTaskExists(itemId)
@@ -155,10 +161,6 @@ func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
 				log.Printf("task exist, itemId: %v", itemId)
 				continue
 			}
-			err = cache.AddTaskToCache(itemId)
-			if err != nil {
-				log.Printf("cache AddTaskToCache err: %v", err)
-			}
 			name, err := GetItemNameByItemId(itemId)
 			if err != nil {
 				log.Printf("GetItemNameByItemId err: %v", err)
@@ -167,7 +169,7 @@ func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
 			task := &model.Task{
 				ItemName: name,
 				ItemId: itemId,
-				Status: model.TaskStatusQueueing,
+				Status: model.TaskStatusCreating,
 				CommentCount: 0,
 			}
 			result = append(result, task)
@@ -175,32 +177,6 @@ func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
 		return result, nil
 	}
 
-	if handler.req.ItemId != 0 {
-		exist, err := cache.CheckTaskExists(handler.req.ItemId)
-		if err != nil{
-			log.Printf("cache CheckTaskExists err: %v", err)
-		}
-		if exist{
-			log.Printf("task exist, itemId: %v", handler.req.ItemId)
-			return nil, nil
-		}
-		err = cache.AddTaskToCache(handler.req.ItemId)
-		if err != nil {
-			log.Printf("cache AddTaskToCache err: %v", err)
-		}
-		name, err := GetItemNameByItemId(handler.req.ItemId)
-		if err != nil {
-			log.Printf("GetItemNameByItemId err: %v", err)
-			return nil, err
-		}
-		task := &model.Task{
-			ItemName: name,
-			ItemId: handler.req.ItemId,
-			Status: model.TaskStatusQueueing,
-			CommentCount: 0,
-		}
-		return []*model.Task{task}, nil
-	}
 	return nil, errors.New("Invalid Param")
 }
 
