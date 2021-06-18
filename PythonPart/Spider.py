@@ -2,7 +2,7 @@ import json
 import random
 import time
 import requests
-from PythonPart import Conns
+import Conns
 
 
 class Category:
