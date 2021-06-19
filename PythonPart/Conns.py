@@ -1,7 +1,6 @@
 import sqlobject
 import redis
-
-from PythonPart import Model
+import Model
 
 
 class Settings:
