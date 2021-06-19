@@ -47,6 +47,8 @@ func (handler MGetCommentByTaskIdHandler) Run () error {
 		"status_code": http.StatusOK,
 		"resp": "get comment by task id success!",
 		"Comments": comments,
+		"limit": handler.req.Limit,
+		"offset": handler.req.Offset,
 	})
 	return nil
 }

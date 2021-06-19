@@ -3,6 +3,7 @@ package method
 import (
 	"SEDesign/dal/cache"
 	"SEDesign/dal/db"
+	"SEDesign/dal/es"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -40,6 +41,12 @@ func (handler DeleteTaskHandler) Run() error {
 	err = cache.DeleteTaskById(handler.req.TaskId)
 	if err != nil {
 		log.Printf("call cache DeleteTaskById err: %v", err)
+		return err
+	}
+
+	err = es.DeleteTaskById(handler.req.TaskId)
+	if err != nil {
+		log.Printf("call es DeleteTaskById err: %v", err)
 		return err
 	}
 

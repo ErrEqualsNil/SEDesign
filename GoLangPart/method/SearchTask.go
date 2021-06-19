@@ -64,6 +64,8 @@ func (handler SearchTaskHandler) Run () error {
 		"resp": "search task success!",
 		"total_count": totalCount,
 		"tasks": tasks,
+		"limit": handler.req.Limit,
+		"offset": handler.req.Offset,
 	})
 	return nil
 }

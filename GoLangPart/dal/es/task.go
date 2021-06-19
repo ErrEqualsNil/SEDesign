@@ -96,3 +96,18 @@ func SearchTaskByName(param *SearchTaskReqParams) (int64, []int64, error) {
 	}
 	return total, resultIds, nil
 }
+
+func DeleteTaskById(id int64) error {
+	conn, err := GetESConn()
+	if err != nil {
+		log.Fatalf("es get conn err: %v", err)
+		return err
+	}
+	query := elastic.NewTermsQuery("id", id)
+	_, err = conn.DeleteByQuery().Query(query).Do(context.Background())
+	if err != nil{
+		log.Printf("es delete by query err: %v", err)
+		return err
+	}
+	return nil
+}

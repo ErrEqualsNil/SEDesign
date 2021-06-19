@@ -17,19 +17,19 @@ type RedisConf struct {
 func GetRedisConn() (redis.Conn, error) {
 	data, err := ioutil.ReadFile("conf/redis_conf.yml")
 	if err != nil {
-		log.Printf("read redis_conf err: %v\n", err)
+		log.Fatalf("read redis_conf err: %v\n", err)
 		return nil, err
 	}
 	conf := RedisConf{}
 	err = yaml.Unmarshal(data, &conf)
 	if err != nil {
-		log.Printf("yaml unmarshal err: %v\n", err)
+		log.Fatalf("yaml unmarshal err: %v\n", err)
 		return nil, err
 	}
 	addr := fmt.Sprintf("%s:%s", conf.Ip, conf.Port)
 	conn, err := redis.Dial(conf.Protocol, addr)
 	if err != nil {
-		log.Printf("Redis get conn err: %v\n", err)
+		log.Fatalf("Redis get conn err: %v\n", err)
 		return nil, err
 	}
 	return conn, err
