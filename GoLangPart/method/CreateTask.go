@@ -150,7 +150,7 @@ func (handler CreateTaskHandler) fillTask() ([]*model.Task, error) {
 			}
 			itemIds = append(itemIds, int64(id))
 		})
-		itemIds = itemIds[1:6] // 选择商品搜索页面的第2-6个商品（第一个经常是广告商品）
+		itemIds = itemIds[0:8] // 选择商品搜索页面的第1-8个商品
 		result := make([]*model.Task, 0)
 		for _, itemId := range itemIds {
 			exist, err := cache.CheckTaskExists(itemId)

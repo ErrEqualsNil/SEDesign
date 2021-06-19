@@ -10,7 +10,7 @@ import (
 
 type EsConf struct {
 	Ip string
-	Port int
+	Port string
 }
 
 func GetESConn() (*elastic.Client, error) {
@@ -25,7 +25,7 @@ func GetESConn() (*elastic.Client, error) {
 		log.Fatalf("yaml unmarshal err: %v", err)
 		return nil, err
 	}
-	url := fmt.Sprintf("http://%s:%d", conf.Ip, conf.Port)
+	url := fmt.Sprintf("http://%s:%s", conf.Ip, conf.Port)
 	client, err := elastic.NewClient(
 			elastic.SetURL(url),
 			elastic.SetSniff(false),
