@@ -1,18 +1,27 @@
 import requests
+from bs4 import BeautifulSoup
 
-target_url = "https://club.jd.com/comment/productPageComments.action?productId=100008348530&score=0&sortType=5&page=0&pageSize=10"
+import requests
+
+ip="220.201.84.233:9999"
+
+proxies = {
+  'http': 'http://' + ip,
+  'https': 'https://' + ip,
+}
 
 
-def main():
-    """
-    main method, entry point
-    :return: none
-    """
-    proxy = []
-    with open("proxyPool.txt") as f:
-        for p in f.readlines():
-            proxy.append(p.strip())
-    f.close()
-    print(proxy)
-if __name__ == '__main__':
-    main()
+def validate(proxies):
+    https_url = 'https://ip.cn'
+    http_url = 'http://ip111.cn/'
+    headers = {'User-Agent': 'curl/7.29.0'}
+    https_r = requests.get(https_url, headers=headers, proxies=proxies, timeout=10)
+    http_r = requests.get(http_url, headers=headers, proxies=proxies, timeout=10)
+    soup = BeautifulSoup(http_r.content, 'html.parser')
+    result = soup.find(class_='card-body').get_text().strip().split('''\n''')[0]
+
+    print(f"当前使用代理：{proxies.values()}")
+    print(f"访问https网站使用代理：{https_r}")
+    print(f"访问http网站使用代理：{result}")
+
+validate(proxies)

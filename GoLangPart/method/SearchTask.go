@@ -23,7 +23,7 @@ type SearchTaskHandler struct {
 }
 
 func (handler SearchTaskHandler) checkValid () bool {
-	if handler.req.Offset < 0 || handler.req.Limit < 0{
+	if handler.req.Offset < 0 || handler.req.Limit <= 0{
 		log.Printf("Invalid Param: %v", handler.req)
 		return false
 	}
@@ -54,6 +54,7 @@ func (handler SearchTaskHandler) Run () error {
 		log.Printf("es SearchTaskByName err: %v", err)
 		return err
 	}
+	log.Printf("es result: %v", taskIds)
 	tasks, err := db.MGetTasks(taskIds)
 	if err != nil {
 		log.Printf("db MGetTasks err: %v", err)

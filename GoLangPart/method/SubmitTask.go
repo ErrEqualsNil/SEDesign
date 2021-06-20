@@ -11,7 +11,7 @@ import (
 
 func SubmitTaskEachTenMin() {
 	for {
-		time.Sleep(10 * time.Minute)
+		time.Sleep(60 * time.Minute)
 		err := SubmitTaskRun()
 		if err != nil {
 			log.Printf("SubmitTaskRun err: %v", err)

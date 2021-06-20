@@ -27,11 +27,10 @@ class ProxyPool:
             "https": "https://" + random.choice(self.proxy)
         }
 
-        
+
 class Spider:
     def __init__(self):
         self.conns = Conns.Conns()
-        self.proxyPool = ProxyPool()
         self.user_agent_list = [
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/90.0.4430.212 Safari/537.36",
@@ -46,6 +45,8 @@ class Spider:
             Category(0, 5, 200, 0),
         ]
         self.use_proxy = False
+        if self.use_proxy:
+            self.proxy_pool = ProxyPool()
 
     def run(self, task_id, item_id):
         comment_cnt = 0
@@ -59,11 +60,13 @@ class Spider:
         comment_cnt = 0
         good_rate = 0
         category = self.categories[category_rank]
-        proxy = self.proxyPool.get_random_proxy()
+        if self.use_proxy:
+            proxy = self.proxyPool.get_random_proxy()
 
         for page in range(category.page_offset, category.page_offset + category.count // 10):
             if page % 2 == 0:
-                proxy = self.proxyPool.get_random_proxy()
+                if self.use_proxy:
+                    proxy = self.proxyPool.get_random_proxy()
                 time.sleep(2)
 
             current_url = self.CommentUrl.format(item_id, category.score, category.sortType, page, 10)
@@ -88,6 +91,7 @@ class Spider:
                 data = json.loads(resp.text)
             except json.JSONDecodeError:
                 print("json decode err, content: {}".format(resp.text))
+                time.sleep(300)
                 continue
 
             comments = data["comments"]
