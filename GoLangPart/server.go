@@ -9,7 +9,7 @@ import (
 
 func main(){
 	//定时检查未提交的任务
-	go method.SubmitTaskEachTenMin()
+	go method.SubmitTaskEachHour()
 	//定时清理异常任务
 	go method.CleanTaskEachHour()
 

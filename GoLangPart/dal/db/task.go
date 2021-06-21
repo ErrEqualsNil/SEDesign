@@ -85,7 +85,7 @@ func MGetUnSubmitTask() ([]*model.Task, error) {
 	}
 
 	result := make([]*model.Task, 0)
-	err = conn.Model(model.Task{}).Where("status in (?)", []model.TaskStatus{model.TaskStatusCreating, model.TaskStatusUnknown}).Find(&result).Error
+	err = conn.Model(model.Task{}).Where("status in (?)", []model.TaskStatus{model.TaskStatusCreating}).Find(&result).Error
 	if err != nil {
 		log.Printf("error to find task (unsubmited), err:%v", err)
 		return nil, err
@@ -106,7 +106,7 @@ func MGetAbnormalTask() ([]*model.Task, error) {
 
 	result := make([]*model.Task, 0)
 	err = conn.Model(model.Task{}).
-		Where("status in (?)", []model.TaskStatus{model.TaskStatusProcessing, model.TaskStatusComplete}).
+		Where("status in (?)", []model.TaskStatus{model.TaskStatusUnknown, model.TaskStatusProcessing, model.TaskStatusComplete}).
 		Where(
 			conn.Where("comment_count<100").Or("good_rate=0"),
 			).

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func SubmitTaskEachTenMin() {
+func SubmitTaskEachHour() {
 	for {
 		time.Sleep(60 * time.Minute)
 		err := SubmitTaskRun()

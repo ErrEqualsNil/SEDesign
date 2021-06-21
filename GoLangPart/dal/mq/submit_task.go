@@ -56,3 +56,19 @@ func SubmitTask(task *model.Task) error {
 	}
 	return nil
 }
+
+func DeleteTask(taskId int64) error {
+	conn, err := GetConn()
+	if err != nil {
+		log.Printf("redis get conn err: %v\n", err)
+		return err
+	}
+	defer conn.Close()
+
+	_, err = conn.Do("LREM", "Tasks", 0, taskId)
+	if err != nil {
+		log.Printf("redis LREM Tasks 0 %v err: %v\n", taskId, err)
+		return err
+	}
+	return nil
+}
