@@ -1,12 +1,13 @@
 package method
 
 import (
-	"SEDesign/dal/cache"
 	"SEDesign/dal/db"
-	"SEDesign/dal/es"
+	"SEDesign/logic"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"log"
+	"net/http"
 )
 
 type DeleteTaskReqParam struct {
@@ -38,23 +39,26 @@ func (handler DeleteTaskHandler) Run() error {
 		return errors.New("invalid params")
 	}
 
-	err = cache.DeleteTaskById(handler.req.TaskId)
+	//检查task是否存在
+	taskList, err := db.MGetTasks([]int64{handler.req.TaskId})
 	if err != nil {
-		log.Printf("call cache DeleteTaskById err: %v", err)
+		if err == gorm.ErrRecordNotFound {
+			log.Printf("delete task not found, taskid: %v", handler.req.TaskId)
+		}
+		log.Printf("call MGetTasks err: %v", err)
 		return err
 	}
 
-	err = es.DeleteTaskById(handler.req.TaskId)
+	task := taskList[0]
+	err = logic.DeleteTask(task)
 	if err != nil {
-		log.Printf("call es DeleteTaskById err: %v", err)
+		log.Printf("logic Delete Task err: %v, taskId: %v", err, task.Id)
 		return err
 	}
 
-	err = db.DeleteTask(handler.req.TaskId)
-	if err != nil {
-		log.Printf("call db DeleteTask err: %v", err)
-		return err
-	}
-
+	handler.Ctx.JSON(http.StatusOK, gin.H{
+		"status_code": http.StatusOK,
+		"resp": "Delete Task success!",
+	})
 	return nil
 }

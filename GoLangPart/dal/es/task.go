@@ -104,7 +104,7 @@ func DeleteTaskById(id int64) error {
 		return err
 	}
 	query := elastic.NewTermsQuery("id", id)
-	_, err = conn.DeleteByQuery().Query(query).Do(context.Background())
+	_, err = conn.DeleteByQuery().Index(ES_Index_Name).Query(query).Do(context.Background())
 	if err != nil{
 		log.Printf("es delete by query err: %v", err)
 		return err

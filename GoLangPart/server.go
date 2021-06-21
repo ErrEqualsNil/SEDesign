@@ -10,6 +10,8 @@ import (
 func main(){
 	//定时检查未提交的任务
 	go method.SubmitTaskEachTenMin()
+	//定时清理异常任务
+	go method.CleanTaskEachHour()
 
 	r := gin.Default()
 	r.POST("/create_task", func(context *gin.Context){
@@ -66,6 +68,20 @@ func main(){
 			context.JSON(http.StatusOK, gin.H{
 				"status_code": http.StatusOK,
 				"resp": "submit task success!",
+			})
+		}
+	})
+
+	r.POST("/delete_task", func(context *gin.Context) {
+		handler := method.DeleteTaskHandler{
+			Ctx: context,
+		}
+		err := handler.Run()
+		if err != nil {
+			log.Printf("Call DeleteTask err: %v", err)
+			context.JSON(http.StatusOK, gin.H{
+				"status_code": http.StatusInternalServerError,
+				"resp": err.Error(),
 			})
 		}
 	})

@@ -48,9 +48,15 @@ func DeleteTask(taskId int64) error {
 		return err
 	}
 
-	err = conn.Model(model.Task{}).Delete(&model.Task{}, taskId).Error
+	err = conn.Model(model.Task{}).Where("id=?", taskId).Delete(&model.Task{}).Error
 	if err != nil {
 		log.Printf("error to delete task at db, err: %v, taskId: %v", err, taskId)
+		return err
+	}
+
+	err = conn.Model(model.Comment{}).Where("task_id=?", taskId).Delete(&model.Comment{}).Error
+	if err != nil {
+		log.Printf("error to delete comments of task, err: %v, taskId: %v", err, taskId)
 		return err
 	}
 	return nil
@@ -87,6 +93,27 @@ func MGetUnSubmitTask() ([]*model.Task, error) {
 	if len(result) == 0 {
 		log.Printf("unsubmited task not found")
 		return nil, gorm.ErrRecordNotFound
+	}
+	return result, nil
+}
+
+func MGetAbnormalTask() ([]*model.Task, error) {
+	conn, err := GetMySQLConn()
+	if err != nil {
+		log.Fatalf("call db GetMySQLConn err: %v", err)
+		return nil, err
+	}
+
+	result := make([]*model.Task, 0)
+	err = conn.Model(model.Task{}).
+		Where("status in (?)", []model.TaskStatus{model.TaskStatusProcessing, model.TaskStatusComplete}).
+		Where(
+			conn.Where("comment_count<100").Or("good_rate=0"),
+			).
+		Find(&result).Error
+	if err != nil {
+		log.Printf("MGetAbnormalTask err: %v", err)
+		return nil, err
 	}
 	return result, nil
 }

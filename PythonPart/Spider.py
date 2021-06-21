@@ -3,29 +3,24 @@ import random
 import time
 import requests
 import Conns
-
-
-class Category:
-    def __init__(self, score, sortType, count, page_offset):
-        self.score = score
-        self.sortType = sortType
-        self.count = count
-        self.page_offset = page_offset
+import Config
 
 
 class ProxyPool:
     def __init__(self):
-        self.proxy = []
-        with open("proxyPool.txt") as f:
-            for p in f.readlines():
-                self.proxy.append(p.strip())
-        f.close()
+        self.get_proxy_url = "http://dev.qydailiip.com/api/?apikey=abdb1bb36ae142ecefa286040d9f0625ed99840c&num=55&type=text&line=unix&proxy_type=putong&sort=3&model=all&protocol=https&address=%E4%B8%AD%E5%9B%BD&kill_address=&port=&kill_port=&today=false&abroad=1&isp=&anonymity=2"
+        self.count = 50
+        self.ips = []
 
     def get_random_proxy(self):
-        return {
-            "http": "http://" + random.choice(self.proxy),
-            "https": "https://" + random.choice(self.proxy)
-        }
+        if self.count % 50 == 0:
+            resp = requests.get(self.get_proxy_url)
+            self.ips = resp.text.split("\n")
+            print("Get New Proxy Group: {}".format(self.ips))
+            self.count = 1
+            time.sleep(5)
+        self.count += 1
+        return self.ips[self.count]
 
 
 class Spider:
@@ -41,19 +36,19 @@ class Spider:
         self.CommentUrl = "https://club.jd.com/comment/productPageComments.action?productId={}&score={}&sortType={" \
                           "}&page={}&pageSize=10"
 
-        self.categories = [
-            Category(0, 5, 200, 0),
-        ]
-        self.use_proxy = False
-        if self.use_proxy:
-            self.proxy_pool = ProxyPool()
+        self.categories = Config.categories
+        self.use_proxy = Config.use_proxy
+        self.proxyPool = ProxyPool()
 
     def run(self, task_id, item_id):
+        requests.packages.urllib3.disable_warnings()
         comment_cnt = 0
         good_rate = 0
         for i in range(len(self.categories)):
             cnt, good_rate = self.get_comment(i, task_id, item_id)
             comment_cnt += cnt
+        if not self.use_proxy:
+            time.sleep(60)
         return comment_cnt, good_rate
 
     def get_comment(self, category_rank: int, task_id, item_id):
@@ -64,34 +59,44 @@ class Spider:
             proxy = self.proxyPool.get_random_proxy()
 
         for page in range(category.page_offset, category.page_offset + category.count // 10):
-            if page % 2 == 0:
-                if self.use_proxy:
+            if self.use_proxy:
+                if page % 10 == 0:
                     proxy = self.proxyPool.get_random_proxy()
-                time.sleep(2)
-
+                    time.sleep(0.5)
+            else:
+                if page % 2 == 0:
+                    time.sleep(2)
             current_url = self.CommentUrl.format(item_id, category.score, category.sortType, page, 10)
             headers = {
                 "User-Agent": random.choice(self.user_agent_list)
             }
 
-            print("headers: {}".format(headers))
             try:
                 if self.use_proxy:
-                    print("catching url: {}; proxy: {}".format(current_url, proxy))
-                    resp = requests.get(current_url, headers=headers, proxies=proxy, verify=False, timeout=10)
+                    proxies = {
+                        "http": "http://" + proxy,
+                        "https:": "https://" + proxy
+                    }
+                    print("page: {} ; catching url: {}; proxy: {}".format(page, current_url, proxy))
+                    resp = requests.get(current_url, headers=headers, proxies=proxies, verify=False, timeout=10)
                 else:
                     print("catching url: {}".format(current_url))
                     resp = requests.get(current_url, headers=headers)
             except Exception as e:
                 print("request err: {}".format(e))
                 proxy = self.proxyPool.get_random_proxy()
+                page -= 1
                 continue
 
             try:
                 data = json.loads(resp.text)
             except json.JSONDecodeError:
                 print("json decode err, content: {}".format(resp.text))
-                time.sleep(300)
+                if self.use_proxy:
+                    proxy = self.proxyPool.get_random_proxy()
+                else:
+                    print("Sleep 300s")
+                    time.sleep(300)
                 continue
 
             comments = data["comments"]

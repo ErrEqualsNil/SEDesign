@@ -13,7 +13,6 @@ class Main:
             task = self.conn.get_task()
 
             # Spider Step
-            time.sleep(60)
             task.status = 3  # update status
             comment_cnt, good_rate = self.spider.run(task.id, task.itemId)
             task.commentCount = comment_cnt
