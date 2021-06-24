@@ -34,5 +34,8 @@ class Conns:
     def write_comment(self, comment, score, task_id, usefulVoteCount):
         _ = Model.Comment(comment=comment, score=score, taskId=task_id,
                           usefulVoteCount=usefulVoteCount)
+    def get_all_comment(self, task_id):
+        return Model.Comment.filter(taskId=task_id)
+        
 
 
