@@ -9,10 +9,12 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import Model
 import json
+import oss2
 
 class Analyzer:
     def __init__(self):
-        pass
+        self.auth = oss2.Auth('LTAI5t6DvAgcgXmiHf8tLAbx', 'SonzRIEFb5K3slYBhsrGC7uJlWlA3V')
+        self.bucket = oss2.Bucket(self.auth, 'oss-cn-beijing.aliyuncs.com', 'sedesign')
 
     # 数据去重
     def quchong(self, infile, outfile):
@@ -61,8 +63,8 @@ class Analyzer:
 
     def process(self, taskid):
         # TODO: do process on item_name
-        Analyzer.get_all_comment(taskid)
-        Analyzer.quchong('contents.txt', 'contentsquchong.txt')
+        self.get_all_comment(taskid)
+        self.quchong('contents.txt', 'contentsquchong.txt')
         data = open('contentsquchong.txt', 'r', encoding='utf-8')
         # 保存情感极性值小于等于0.1的结果为负面情感结果
         f = open('comments_neg.txt', 'w', encoding='utf-8')
@@ -123,31 +125,24 @@ class Analyzer:
             wc = WordCloud(
                 background_color="black",
                 max_words=2000,
-                font_path='C:/Windows/Fonts/simfang.ttf',
                 height=800,
                 width=1000,
                 max_font_size=100,
                 random_state=30, )
-            myword = wc.generate(data)
-        plt.imshow(myword)
-        plt.axis("off")
-        plt.show()
         wc.to_file('pos.png')
+        self.bucket.put_object_from_file("{}_pos.png".format(taskid), 'pos.png')
+
         with open('contentsfencineg.txt', encoding='utf-8') as f:
             data = f.read()
             wc = WordCloud(
                 background_color="black",
                 max_words=2000,
-                font_path='C:/Windows/Fonts/simfang.ttf',
                 height=800,
                 width=1000,
                 max_font_size=100,
                 random_state=30, )
-            myword = wc.generate(data)
-        plt.imshow(myword)
-        plt.axis("off")
-        plt.show()
         wc.to_file('neg.png')
+        self.bucket.put_object_from_file("{}_neg.png".format(taskid), 'neg.png')
         # 生成用户关注点
         inputs = open('contentsquchong.txt', 'r', encoding='utf-8')
         outstr = ''
@@ -160,13 +155,17 @@ class Analyzer:
                         outstr += word.word
         Key = jieba.analyse.extract_tags(outstr, topK=10)
         print(Key)
+        task = Model.Task.get(id=taskid)
+        task.wordCloudUrl = "[{},{}]".format("https://sedesign.oss-cn-beijing.aliyuncs.com/{}_pos.png".format(taskid),
+                                             "https://sedesign.oss-cn-beijing.aliyuncs.com/{}_neg.png".format(taskid))
+
 
     def report(self, pathname, flagname):
         inputs = open(pathname, 'r', encoding='utf-8')
         outstr = ''
         for line in inputs:
             sentence_seged = pseg.cut(line.strip())
-            stopwords = Analyzer.stopwordslist('stopwords.txt')
+            stopwords = self.stopwordslist('stopwords.txt')
             for word in sentence_seged:
                 if word.word not in stopwords:
                     if word.word != '\t' and word.flag == flagname:
@@ -178,9 +177,9 @@ class Analyzer:
         return report0
 
     def totalreport(self):
-        report = '用户认为的优势：' + Analyzer.report("comments_pos.txt", "a") + '用户认为的劣势：' + Analyzer.report(
+        report = '用户认为的优势：' + self.report("comments_pos.txt", "a") + '用户认为的劣势：' + Analyzer.report(
             "comments_neg.txt", "a") \
-                 + '用户认为最好的方面：' + Analyzer.report("contentsquchong.txt", "n")
+                 + '用户认为最好的方面：' + self.report("contentsquchong.txt", "n")
         return report
 
         inputs.close()

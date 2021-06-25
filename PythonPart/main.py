@@ -7,6 +7,7 @@ class Main:
     def __init__(self):
         self.conn = Conns.Conns()
         self.spider = Spider.Spider()
+        self.analyzer = Analyzer.Analyzer()
 
     def Run(self):
         print("Start Spider")
@@ -21,7 +22,7 @@ class Main:
             task.status = 4
 
             # todo: call analysis services
-            Analyzer.process(task.id)
+            self.analyzer.process(task.id)
             
 
 
