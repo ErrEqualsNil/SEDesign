@@ -49,10 +49,10 @@ func CleanTask() error{
 
 func CleanTaskEachHour() {
 	for {
+	    time.Sleep(time.Hour * 1)
 		err := CleanTask()
 		if err != nil {
 			log.Printf("clean task err: %v", err)
 		}
-		time.Sleep(time.Hour * 1)
 	}
 }

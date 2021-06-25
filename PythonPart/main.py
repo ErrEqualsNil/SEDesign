@@ -20,7 +20,10 @@ class Main:
             comment_cnt, good_rate = self.spider.run(task.id, task.itemId)
             task.commentCount = comment_cnt
             task.goodRate = good_rate
-            self.analyzer.process(task.id)
+            try:
+                self.analyzer.process(task.id)
+            except Exception as e:
+                print(task.id, e)
             task.status = 4
 
 
