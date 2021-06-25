@@ -38,3 +38,5 @@ class Conns:
         return Model.Comment.filter(taskId=task_id).comment
     def write_hotword(self, task_id, hotword) -> Model.Task:
         Model.Task.filter(id=task_id).update(hotWords=hotword)
+    def write_report(self, task_id, rep) -> Model.Task:
+        Model.Task.filter(id=task_id).update(report=rep)
