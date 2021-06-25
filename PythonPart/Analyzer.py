@@ -14,7 +14,7 @@ class Analyzer:
     def __init__(self):
         pass
 
-    # æ•°æ®å»é‡
+    # Êı¾İÈ¥ÖØ
     def quchong(self, infile, outfile):
         infopen = open(infile, 'r', encoding='utf-8')
         outopen = open(outfile, 'w', encoding='utf-8')
@@ -27,15 +27,15 @@ class Analyzer:
         infopen.close()
         outopen.close()
 
-    # åˆ›å»ºåœç”¨è¯list
+    # ´´½¨Í£ÓÃ´Êlist
     def stopwordslist(self, filepath):
         stopwords = [line.strip() for line in open(filepath, 'r', encoding='utf-8').readlines()]
         return stopwords
 
-    # å¯¹è¯„è®ºå†…å®¹è¿›è¡Œåˆ†è¯
+    # ¶ÔÆÀÂÛÄÚÈİ½øĞĞ·Ö´Ê
     def seg_sentence(self, sentence):
         sentence_seged = pseg.cut(sentence.strip())
-        stopwords = Analyzer.stopwordslist('stopwords.txt')  # è¿™é‡ŒåŠ è½½åœç”¨è¯çš„è·¯å¾„
+        stopwords = Analyzer.stopwordslist('stopwords.txt')  # ÕâÀï¼ÓÔØÍ£ÓÃ´ÊµÄÂ·¾¶
         outstr = ''
         for word in sentence_seged:
             if word.word not in stopwords:
@@ -43,13 +43,13 @@ class Analyzer:
                     outstr += word.word
             outstr += " "
         return outstr
-    # è·å–è¯„è®º
+    # »ñÈ¡ÆÀÂÛ
     def get_all_comment(self, task_id):
         f = open('contents.txt', 'w', encoding='utf-8')
         f.write(Model.Comment.filter(taskId=task_id)[1]+'\n')
         f.close()
 
-    # è¿”å›json
+    # ·µ»Øjson
     def jsonfile(data):
         n = 10
         L = sorted(data.items(), key=lambda item: item[1], reverse=True)
@@ -59,11 +59,12 @@ class Analyzer:
             dictdata[l[0]] = l[1]
         return json.dumps(dictdata, ensure_ascii=False)
 
-    def process(self, item_name):
+    def process(self, taskid):
         # TODO: do process on item_name
+        Analyzer.get_all_comment(taskid)
         Analyzer.quchong('contents.txt', 'contentsquchong.txt')
         data = open('contentsquchong.txt', 'r', encoding='utf-8')
-        # ä¿å­˜æƒ…æ„Ÿææ€§å€¼å°äºç­‰äº0.1çš„ç»“æœä¸ºè´Ÿé¢æƒ…æ„Ÿç»“æœ
+        # ±£´æÇé¸Ğ¼«ĞÔÖµĞ¡ÓÚµÈÓÚ0.1µÄ½á¹ûÎª¸ºÃæÇé¸Ğ½á¹û
         f = open('comments_neg.txt', 'w', encoding='utf-8')
         for j in data:
             s = SnowNLP(j)
@@ -71,7 +72,7 @@ class Analyzer:
                 f.write(j + '\n')
         f.close()
         data.close()
-        # ä¿å­˜æƒ…æ„Ÿææ€§å€¼å¤§äº0.1çš„ç»“æœä¸ºæ­£é¢æƒ…æ„Ÿç»“æœ
+        # ±£´æÇé¸Ğ¼«ĞÔÖµ´óÓÚ0.1µÄ½á¹ûÎªÕıÃæÇé¸Ğ½á¹û
         data = open('contentsquchong.txt', 'r', encoding='utf-8')
         f = open('comments_pos.txt', 'w', encoding='utf-8')
         for j in data:
@@ -80,7 +81,7 @@ class Analyzer:
                 f.write(j + '\n')
         f.close()
         data.close()
-        # æ­£é¢è¯„ä»·åˆ†è¯
+        # ÕıÃæÆÀ¼Û·Ö´Ê
         inputs = open('comments_pos.txt', 'r', encoding='utf-8')
         outputs = open('contentsfencipos.txt', 'w', encoding='utf-8')
         for line in inputs:
@@ -88,7 +89,7 @@ class Analyzer:
             outputs.write(line_seg + '\n')
         outputs.close()
         inputs.close()
-        # è´Ÿé¢è¯„ä»·åˆ†è¯
+        # ¸ºÃæÆÀ¼Û·Ö´Ê
         inputs = open('comments_neg.txt', 'r', encoding='utf-8')
         outputs = open('contentsfencineg.txt', 'w', encoding='utf-8')
         for line in inputs:
@@ -96,8 +97,8 @@ class Analyzer:
             outputs.write(line_seg + '\n')
         outputs.close()
         inputs.close()
-        # è¯é¢‘ç»Ÿè®¡
-        # æ­£é¢è¯„ä»·
+        # ´ÊÆµÍ³¼Æ
+        # ÕıÃæÆÀ¼Û
         with open('contentsfencipos.txt', 'r', encoding='utf-8') as fr:
             data = jieba.cut(fr.read())
             data = dict(Counter(data))
@@ -107,7 +108,7 @@ class Analyzer:
         with open('contentscipinpos.txt', 'w', encoding='utf-8') as fw:
             for k, v in data.items():
                 fw.write('%s, %d\n' % (k, v))
-        # è´Ÿé¢è¯„ä»·
+        # ¸ºÃæÆÀ¼Û
         with open('contentsfencineg.txt', 'r', encoding='utf-8') as fr:
             data = jieba.cut(fr.read())
             data = dict(Counter(data))
@@ -116,7 +117,7 @@ class Analyzer:
         with open('contentscipinneg.txt', 'w', encoding='utf-8') as fw:
             for k, v in data.items():
                 fw.write('%s, %d\n' % (k, v))
-        # ç”Ÿæˆè¯äº‘
+        # Éú³É´ÊÔÆ
         with open('contentsfencipos.txt', encoding='utf-8') as f:
             data = f.read()
             wc = WordCloud(
@@ -147,7 +148,7 @@ class Analyzer:
         plt.axis("off")
         plt.show()
         wc.to_file('neg.png')
-        # ç”Ÿæˆç”¨æˆ·å…³æ³¨ç‚¹
+        # Éú³ÉÓÃ»§¹Ø×¢µã
         inputs = open('contentsquchong.txt', 'r', encoding='utf-8')
         outstr = ''
         for line in inputs:
@@ -177,9 +178,9 @@ class Analyzer:
         return report0
 
     def totalreport(self):
-        report = 'ç”¨æˆ·è®¤ä¸ºçš„ä¼˜åŠ¿ï¼š' + Analyzer.report("comments_pos.txt", "a") + 'ç”¨æˆ·è®¤ä¸ºçš„åŠ£åŠ¿ï¼š' + Analyzer.report(
+        report = 'ÓÃ»§ÈÏÎªµÄÓÅÊÆ£º' + Analyzer.report("comments_pos.txt", "a") + 'ÓÃ»§ÈÏÎªµÄÁÓÊÆ£º' + Analyzer.report(
             "comments_neg.txt", "a") \
-                 + 'ç”¨æˆ·è®¤ä¸ºæœ€å¥½çš„æ–¹é¢ï¼š' + Analyzer.report("contentsquchong.txt", "n")
+                 + 'ÓÃ»§ÈÏÎª×îºÃµÄ·½Ãæ£º' + Analyzer.report("contentsquchong.txt", "n")
         return report
 
         inputs.close()

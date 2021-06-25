@@ -1,6 +1,7 @@
 import Conns
 import Spider
 import time
+import Analyzer
 
 class Main:
     def __init__(self):
@@ -20,6 +21,8 @@ class Main:
             task.status = 4
 
             # todo: call analysis services
+            Analyzer.process(task.id)
+            
 
 
 
