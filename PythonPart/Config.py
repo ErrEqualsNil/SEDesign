@@ -7,6 +7,6 @@ class Category:
 
 use_proxy = False
 categories = [
-    Category(3, 5, 200, 0),
-    Category(1, 5, 30, 0)
+    Category(3, 5, 1200, 0),
+    Category(1, 5, 100, 0)
 ]

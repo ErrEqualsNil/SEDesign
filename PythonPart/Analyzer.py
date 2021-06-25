@@ -142,7 +142,7 @@ class Analyzer:
         self.bucket.put_object_from_file("{}_neg.png".format(taskid), 'neg.png')
 
         task = Model.Task.get(id=taskid)
-        task.wordCloudUrl = "[{},{}]".format("https://sedesign.oss-cn-beijing.aliyuncs.com/{}_pos.png".format(taskid),
+        task.wordCloudUrl = "[{}, {}]".format("https://sedesign.oss-cn-beijing.aliyuncs.com/{}_pos.png".format(taskid),
                                              "https://sedesign.oss-cn-beijing.aliyuncs.com/{}_neg.png".format(taskid))
         
         report = 'Advantage:' + self.report(comments_pos, "a") + 'Disadvantage:' + self.report(
