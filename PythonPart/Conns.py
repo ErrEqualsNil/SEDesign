@@ -34,9 +34,12 @@ class Conns:
     def write_comment(self, comment, score, task_id, usefulVoteCount):
         _ = Model.Comment(comment=comment, score=score, taskId=task_id,
                           usefulVoteCount=usefulVoteCount)
+
     def get_all_comment(self, task_id):
         return Model.Comment.filter(taskId=task_id).comment
-    def write_hotword(self, task_id, hotword) -> Model.Task:
+
+    def write_hotword(self, task_id, hotword):
         Model.Task.filter(id=task_id).update(hotWords=hotword)
-    def write_report(self, task_id, rep) -> Model.Task:
+
+    def write_report(self, task_id, rep):
         Model.Task.filter(id=task_id).update(report=rep)

@@ -2,6 +2,7 @@ import Conns
 import Spider
 import time
 import Analyzer
+import Model
 
 class Main:
     def __init__(self):
@@ -11,19 +12,20 @@ class Main:
 
     def Run(self):
         print("Start Spider")
-        while 1:
-            task = self.conn.get_task()
-
-            # Spider Step
-            task.status = 3  # update status
-            comment_cnt, good_rate = self.spider.run(task.id, task.itemId)
-            task.commentCount = comment_cnt
-            task.goodRate = good_rate
-            task.status = 4
-
-            # todo: call analysis services
-            self.analyzer.process(task.id)
-            
+        # while 1:
+        #     task = self.conn.get_task()
+        #
+        #     # Spider Step
+        #     task.status = 3  # update status
+        #     comment_cnt, good_rate = self.spider.run(task.id, task.itemId)
+        #     task.commentCount = comment_cnt
+        #     task.goodRate = good_rate
+        #
+        #     # todo: call analysis services
+        #     self.analyzer.process(task.id)
+        #     task.status = 4
+        task = Model.Task.get(id=381)
+        self.analyzer.process(task.id)
 
 
 

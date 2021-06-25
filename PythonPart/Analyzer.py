@@ -37,7 +37,7 @@ class Analyzer:
     # 对评论内容进行分词
     def seg_sentence(self, sentence):
         sentence_seged = pseg.cut(sentence.strip())
-        stopwords = Analyzer.stopwordslist('stopwords.txt')  # 这里加载停用词的路径
+        stopwords = self.stopwordslist('stopwords.txt')  # 这里加载停用词的路径
         outstr = ''
         for word in sentence_seged:
             if word.word not in stopwords:
@@ -48,11 +48,13 @@ class Analyzer:
     # 获取评论
     def get_all_comment(self, task_id):
         f = open('contents.txt', 'w', encoding='utf-8')
-        f.write(Model.Comment.filter(taskId=task_id)[1]+'\n')
+        comments = Model.Comment.select(Model.Comment.q.taskId==task_id)
+        for comment in comments:
+            f.write(comment.comment)
         f.close()
 
     # 返回json
-    def jsonfile(data):
+    def jsonfile(self, data):
         n = 10
         L = sorted(data.items(), key=lambda item: item[1], reverse=True)
         L = L[:n]
@@ -60,6 +62,22 @@ class Analyzer:
         for l in L:
             dictdata[l[0]] = l[1]
         return json.dumps(dictdata, ensure_ascii=False)
+
+    def report(self, pathname, flagname):
+        inputs = open(pathname, 'r', encoding='utf-8')
+        outstr = ''
+        for line in inputs:
+            sentence_seged = pseg.cut(line.strip())
+            stopwords = self.stopwordslist('stopwords.txt')
+            for word in sentence_seged:
+                if word.word not in stopwords:
+                    if word.word != '\t' and word.flag == flagname:
+                        outstr += word.word
+        Key = jieba.analyse.extract_tags(outstr, topK=10)
+        dot = ','
+        for i in Key:
+            report0 = i + dot
+        return report0
 
     def process(self, taskid):
         # TODO: do process on item_name
@@ -87,7 +105,7 @@ class Analyzer:
         inputs = open('comments_pos.txt', 'r', encoding='utf-8')
         outputs = open('contentsfencipos.txt', 'w', encoding='utf-8')
         for line in inputs:
-            line_seg = Analyzer.seg_sentence(line)
+            line_seg = self.seg_sentence(line)
             outputs.write(line_seg + '\n')
         outputs.close()
         inputs.close()
@@ -95,7 +113,7 @@ class Analyzer:
         inputs = open('comments_neg.txt', 'r', encoding='utf-8')
         outputs = open('contentsfencineg.txt', 'w', encoding='utf-8')
         for line in inputs:
-            line_seg = Analyzer.seg_sentence(line)
+            line_seg = self.seg_sentence(line)
             outputs.write(line_seg + '\n')
         outputs.close()
         inputs.close()
@@ -104,7 +122,7 @@ class Analyzer:
         with open('contentsfencipos.txt', 'r', encoding='utf-8') as fr:
             data = jieba.cut(fr.read())
             data = dict(Counter(data))
-            print(Analyzer.jsonfile(data))
+            data1 = self.jsonfile(data)
 
 
         with open('contentscipinpos.txt', 'w', encoding='utf-8') as fw:
@@ -114,7 +132,7 @@ class Analyzer:
         with open('contentsfencineg.txt', 'r', encoding='utf-8') as fr:
             data = jieba.cut(fr.read())
             data = dict(Counter(data))
-            print(Analyzer.jsonfile(data))
+            data2 = self.jsonfile(data)
 
         with open('contentscipinneg.txt', 'w', encoding='utf-8') as fw:
             for k, v in data.items():
@@ -123,63 +141,36 @@ class Analyzer:
         with open('contentsfencipos.txt', encoding='utf-8') as f:
             data = f.read()
             wc = WordCloud(
-                background_color="black",
+                background_color="white",
                 max_words=2000,
                 height=800,
                 width=1000,
                 max_font_size=100,
                 random_state=30, )
+            wc.generate(data)
         wc.to_file('pos.png')
         self.bucket.put_object_from_file("{}_pos.png".format(taskid), 'pos.png')
 
         with open('contentsfencineg.txt', encoding='utf-8') as f:
             data = f.read()
             wc = WordCloud(
-                background_color="black",
+                background_color="white",
                 max_words=2000,
                 height=800,
                 width=1000,
                 max_font_size=100,
                 random_state=30, )
+            wc.generate(data)
         wc.to_file('neg.png')
         self.bucket.put_object_from_file("{}_neg.png".format(taskid), 'neg.png')
-        # 生成用户关注点
-        inputs = open('contentsquchong.txt', 'r', encoding='utf-8')
-        outstr = ''
-        for line in inputs:
-            sentence_seged = pseg.cut(line.strip())
-            stopwords = Analyzer.stopwordslist('stopwords.txt')
-            for word in sentence_seged:
-                if word.word not in stopwords:
-                    if word.word != '\t' and word.flag == "n":
-                        outstr += word.word
-        Key = jieba.analyse.extract_tags(outstr, topK=10)
-        print(Key)
+
         task = Model.Task.get(id=taskid)
         task.wordCloudUrl = "[{},{}]".format("https://sedesign.oss-cn-beijing.aliyuncs.com/{}_pos.png".format(taskid),
                                              "https://sedesign.oss-cn-beijing.aliyuncs.com/{}_neg.png".format(taskid))
-
-
-    def report(self, pathname, flagname):
-        inputs = open(pathname, 'r', encoding='utf-8')
-        outstr = ''
-        for line in inputs:
-            sentence_seged = pseg.cut(line.strip())
-            stopwords = self.stopwordslist('stopwords.txt')
-            for word in sentence_seged:
-                if word.word not in stopwords:
-                    if word.word != '\t' and word.flag == flagname:
-                        outstr += word.word
-        Key = jieba.analyse.extract_tags(outstr, topK=10)
-        dot = ','
-        for i in Key:
-            report0 = i + dot
-        return report0
-
-    def totalreport(self):
-        report = '用户认为的优势：' + self.report("comments_pos.txt", "a") + '用户认为的劣势：' + Analyzer.report(
+        
+        report = 'Advantage:' + self.report("comments_pos.txt", "a") + 'Disadvantage:' + self.report(
             "comments_neg.txt", "a") \
-                 + '用户认为最好的方面：' + self.report("contentsquchong.txt", "n")
-        return report
+                 + 'Focus:' + self.report("contentsquchong.txt", "n")
 
-        inputs.close()
+        task.hotWords = "{},{}".format(data1, data2)
+        task.report = report
